@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eclair AI Test Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .status {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .response-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 150px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+            display: none;
+        }
+        
+        .response-box.active {
+            display: block;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .api-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .api-info code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s;
+            width: auto;
+        }
+        
+        .tab:hover {
+            background: #f8f9fa;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .endpoint-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .endpoint-section h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .endpoint-section .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .method.post {
+            background: #28a745;
+            color: white;
+        }
+        
+        .method.get {
+            background: #007bff;
+            color: white;
+        }
+        
+        .method.put {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .method.delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .flex-row .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .small-input {
+            max-width: 150px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+            background: white;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Eclair AI Test Client</h1>
+        <p class="subtitle">Testing your backend API at: <strong>https://eclair-b7zo.vercel.app</strong></p>
+        
+        <div id="statusMessage" class="status info">
+            Ready to test API endpoints!
+        </div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('ai')">AI Services</button>
+            <button class="tab" onclick="switchTab('web')">Web Summary</button>
+            <button class="tab" onclick="switchTab('notes')">Notes</button>
+            <button class="tab" onclick="switchTab('health')">Health</button>
+        </div>
+        
+        <!-- AI Services Tab -->
+        <div id="ai-tab" class="tab-content active">
+            <!-- Chat Endpoint -->
+            <div class="endpoint-section">
+                <h3><span class="method post">POST</span> /api/ai/chat - General AI Conversation</h3>
+                <div class="input-group">
+                    <label>Prompt:</label>
+                    <textarea id="chat-prompt" placeholder="Your message...">Hello! Can you tell me a fun fact about AI?</textarea>
+                </div>
+                <div class="flex-row">
+                    <div class="input-group small-input">
+                        <label>Temperature (0-1):</label>
+                        <input type="text" id="chat-temp" value="0.7">
+                    </div>
+                    <div class="input-group small-input">
+                        <label>Max Tokens:</label>
+                        <input type="text" id="chat-tokens" value="2048">
+                    </div>
+                </div>
+                <button onclick="testAIChat()">Send Chat</button>
+            </div>
+            
+            <!-- Generate Note Endpoint -->
+            <div class="endpoint-section">
+                <h3><span class="method post">POST</span> /api/ai/generate-note - Generate Note Content</h3>
+                <div class="input-group">
+                    <label>Topic/Prompt:</label>
+                    <textarea id="note-prompt" placeholder="Topic or instructions for note generation...">Write a note about machine learning basics</textarea>
+                </div>
+                <button onclick="testGenerateNote()">Generate Note</button>
+            </div>
+            
+            <!-- Summarize Endpoint -->
+            <div class="endpoint-section">
+                <h3><span class="method post">POST</span> /api/ai/summarize - Summarize Text</h3>
+                <div class="input-group">
+                    <label>Text to Summarize:</label>
+                    <textarea id="summarize-text" placeholder="Paste text to summarize...">Artificial intelligence (AI) is intelligence demonstrated by machines, in contrast to the natural intelligence displayed by humans and animals. Leading AI textbooks define the field as the study of "intelligent agents": any device that perceives its environment and takes actions that maximize its chance of successfully achieving its goals.</textarea>
+                </div>
+                <button onclick="testSummarize()">Summarize</button>
+            </div>
+        </div>
+        
+        <!-- Web Summary Tab -->
+        <div id="web-tab" class="tab-content">
+            <!-- Extract Endpoint -->
+            <div class="endpoint-section">
+                <h3><span class="method post">POST</span> /api/web-summary/extract - Extract Content from URL</h3>
+                <div class="input-group">
+                    <label>URL:</label>
+                    <input type="text" id="extract-url" placeholder="https://example.com/article">
+                </div>
+                <button onclick="testWebExtract()">Extract Content</button>
+            </div>
+            
+            <!-- Summarize Web Content Endpoint -->
+            <div class="endpoint-section">
+                <h3><span class="method post">POST</span> /api/web-summary/summarize - Extract & Summarize (Streaming)</h3>
+                <div class="input-group">
+                    <label>URL:</label>
+                    <input type="text" id="web-summarize-url" placeholder="https://example.com/article">
+                </div>
+                <button onclick="testWebSummarize()">Summarize Web Page</button>
+            </div>
+        </div>
+        
+        <!-- Notes Tab -->
+        <div id="notes-tab" class="tab-content">
+            <div class="api-info">
+                <strong>⚠️ Note:</strong> These endpoints require authentication. Set your auth token below.
+            </div>
+            
+            <div class="input-group">
+                <label>Auth Token (if required):</label>
+                <input type="text" id="auth-token" placeholder="Bearer token...">
+            </div>
+            
+            <!-- List Notes -->
+            <div class="endpoint-section">
+                <h3><span class="method get">GET</span> /api/notes - List User's Notes</h3>
+                <button onclick="testListNotes()">List Notes</button>
+            </div>
+            
+            <!-- Get Note by ID -->
+            <div class="endpoint-section">
+                <h3><span class="method get">GET</span> /api/notes/:id - Get Specific Note</h3>
+                <div class="input-group">
+                    <label>Note ID:</label>
+                    <input type="text" id="get-note-id" placeholder="note-id-123">
+                </div>
+                <button onclick="testGetNote()">Get Note</button>
+            </div>
+            
+            <!-- Create Note -->
+            <div class="endpoint-section">
+                <h3><span class="method post">POST</span> /api/notes - Create New Note</h3>
+                <div class="input-group">
+                    <label>Title:</label>
+                    <input type="text" id="create-note-title" placeholder="My Note Title">
+                </div>
+                <div class="input-group">
+                    <label>Content:</label>
+                    <textarea id="create-note-content" placeholder="Note content...">This is a test note.</textarea>
+                </div>
+                <div class="input-group">
+                    <label>Tags (comma separated):</label>
+                    <input type="text" id="create-note-tags" placeholder="tag1, tag2, tag3">
+                </div>
+                <button onclick="testCreateNote()">Create Note</button>
+            </div>
+            
+            <!-- Update Note -->
+            <div class="endpoint-section">
+                <h3><span class="method put">PUT</span> /api/notes/:id - Update Note</h3>
+                <div class="input-group">
+                    <label>Note ID:</label>
+                    <input type="text" id="update-note-id" placeholder="note-id-123">
+                </div>
+                <div class="input-group">
+                    <label>Title:</label>
+                    <input type="text" id="update-note-title" placeholder="Updated Title">
+                </div>
+                <div class="input-group">
+                    <label>Content:</label>
+                    <textarea id="update-note-content" placeholder="Updated content..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Tags (comma separated):</label>
+                    <input type="text" id="update-note-tags" placeholder="tag1, tag2">
+                </div>
+                <button onclick="testUpdateNote()">Update Note</button>
+            </div>
+            
+            <!-- Delete Note -->
+            <div class="endpoint-section">
+                <h3><span class="method delete">DELETE</span> /api/notes/:id - Delete Note</h3>
+                <div class="input-group">
+                    <label>Note ID:</label>
+                    <input type="text" id="delete-note-id" placeholder="note-id-123">
+                </div>
+                <button onclick="testDeleteNote()">Delete Note</button>
+            </div>
+            
+            <!-- Search Notes -->
+            <div class="endpoint-section">
+                <h3><span class="method get">GET</span> /api/notes/search/query - Search Notes</h3>
+                <div class="input-group">
+                    <label>Search Query:</label>
+                    <input type="text" id="search-query" placeholder="Search term...">
+                </div>
+                <button onclick="testSearchNotes()">Search Notes</button>
+            </div>
+        </div>
+        
+        <!-- Health Tab -->
+        <div id="health-tab" class="tab-content">
+            <!-- Root Endpoint -->
+            <div class="endpoint-section">
+                <h3><span class="method get">GET</span> / - Server Status</h3>
+                <button onclick="testRoot()">Check Root Status</button>
+            </div>
+            
+            <!-- Health Endpoint -->
+            <div class="endpoint-section">
+                <h3><span class="method get">GET</span> /health - Health Check with Uptime</h3>
+                <button onclick="testHealth()">Check Health</button>
+            </div>
+        </div>
+        
+        <div id="responseBox" class="response-box"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://eclair-b7zo.vercel.app';
+        
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+            
+            showStatus(`Switched to ${tabName.toUpperCase()} section`, 'info');
+        }
+        
+        function showStatus(message, type) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = `status ${type}`;
+        }
+        
+        function showResponse(content, isError = false) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = content;
+            responseBox.classList.add('active');
+            if (isError) {
+                responseBox.style.background = '#f8d7da';
+                responseBox.style.borderColor = '#f5c6cb';
+            } else {
+                responseBox.style.background = '#f8f9fa';
+                responseBox.style.borderColor = '#e0e0e0';
+            }
+        }
+        
+        function getAuthHeaders() {
+            const token = document.getElementById('auth-token')?.value.trim();
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) {
+                headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+            }
+            return headers;
+        }
+        
+        // AI Services
+        async function testAIChat() {
+            const prompt = document.getElementById('chat-prompt').value;
+            const temperature = parseFloat(document.getElementById('chat-temp').value) || 0.7;
+            const max_tokens = parseInt(document.getElementById('chat-tokens').value) || 2048;
+            
+            showStatus('Sending chat request (streaming)...', 'info');
+            showResponse('Waiting for AI response...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ai/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, temperature, max_tokens })
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.content) {
+                                    fullResponse += data.content;
+                                    showResponse(fullResponse);
+                                }
+                                if (data.finished) {
+                                    showResponse(data.fullResponse || fullResponse);
+                                    showStatus('✅ Chat response received!', 'success');
+                                }
+                                if (data.error) throw new Error(data.message);
+                            } catch (e) {}
+                        }
+                    }
+                }
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGenerateNote() {
+            const prompt = document.getElementById('note-prompt').value;
+            showStatus('Generating note...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ai/generate-note`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Note generated successfully!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSummarize() {
+            const text = document.getElementById('summarize-text').value;
+            showStatus('Summarizing text...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/ai/summarize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Text summarized successfully!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Web Summary
+        async function testWebExtract() {
+            const url = document.getElementById('extract-url').value;
+            showStatus('Extracting content...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/web-summary/extract`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                
+                // Format the extracted content nicely
+                let formattedContent = '=== EXTRACTED CONTENT ===\n\n';
+                
+                if (data.title) {
+                    formattedContent += `📄 TITLE: ${data.title}\n\n`;
+                }
+                
+                if (data.author) {
+                    formattedContent += `✍️ AUTHOR: ${data.author}\n\n`;
+                }
+                
+                if (data.publishedDate) {
+                    formattedContent += `📅 PUBLISHED: ${data.publishedDate}\n\n`;
+                }
+                
+                if (data.description) {
+                    formattedContent += `📝 DESCRIPTION:\n${data.description}\n\n`;
+                }
+                
+                if (data.content) {
+                    formattedContent += `📖 CONTENT:\n${data.content}\n\n`;
+                }
+                
+                formattedContent += '\n=== RAW JSON ===\n' + JSON.stringify(data, null, 2);
+                
+                showResponse(formattedContent);
+                showStatus('✅ Content extracted successfully!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testWebSummarize() {
+            const url = document.getElementById('web-summarize-url').value;
+            showStatus('Extracting and summarizing (streaming)...', 'info');
+            showResponse('Processing...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/web-summary/summarize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.content) {
+                                    fullResponse += data.content;
+                                    showResponse(fullResponse);
+                                }
+                                if (data.finished) {
+                                    showResponse(data.fullResponse || fullResponse);
+                                    showStatus('✅ Web content summarized!', 'success');
+                                }
+                                if (data.error) throw new Error(data.message);
+                            } catch (e) {}
+                        }
+                    }
+                }
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Notes Management
+        async function testListNotes() {
+            showStatus('Fetching notes...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/notes`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Notes retrieved successfully!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetNote() {
+            const id = document.getElementById('get-note-id').value;
+            if (!id) {
+                showStatus('Please enter a note ID', 'error');
+                return;
+            }
+            
+            showStatus('Fetching note...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/notes/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Note retrieved successfully!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCreateNote() {
+            const title = document.getElementById('create-note-title').value;
+            const content = document.getElementById('create-note-content').value;
+            const tagsStr = document.getElementById('create-note-tags').value;
+            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()) : [];
+            
+            showStatus('Creating note...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/notes`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ title, content, tags })
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Note created successfully!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testUpdateNote() {
+            const id = document.getElementById('update-note-id').value;
+            if (!id) {
+                showStatus('Please enter a note ID', 'error');
+                return;
+            }
+            
+            const title = document.getElementById('update-note-title').value;
+            const content = document.getElementById('update-note-content').value;
+            const tagsStr = document.getElementById('update-note-tags').value;
+            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()) : [];
+            
+            showStatus('Updating note...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/notes/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ title, content, tags })
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Note updated successfully!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDeleteNote() {
+            const id = document.getElementById('delete-note-id').value;
+            if (!id) {
+                showStatus('Please enter a note ID', 'error');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete note ${id}?`)) return;
+            
+            showStatus('Deleting note...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/notes/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Note deleted successfully!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSearchNotes() {
+            const query = document.getElementById('search-query').value;
+            if (!query) {
+                showStatus('Please enter a search query', 'error');
+                return;
+            }
+            
+            showStatus('Searching notes...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/notes/search/query?q=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Search completed!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Health Checks
+        async function testRoot() {
+            showStatus('Checking root status...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/`);
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Server is running!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testHealth() {
+            showStatus('Checking health...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                showResponse(JSON.stringify(data, null, 2));
+                showStatus('✅ Health check passed!', 'success');
+            } catch (error) {
+                showResponse(`❌ Error: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test connection on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/`);
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    showStatus(`✅ Backend is online! Server: ${data.message}`, 'success');
+                }
+            } catch (error) {
+                showStatus('⚠️ Could not connect to backend. Please check the URL.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
